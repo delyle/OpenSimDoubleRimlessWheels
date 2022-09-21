@@ -45,7 +45,7 @@ cylLength = legLength/2;
 
 % whether to run a simulation
 simulate = true;
-endTime = 15;
+endTime = 30;
 useVis = false;
 
 %% intantiate an empty OpenSim Model
