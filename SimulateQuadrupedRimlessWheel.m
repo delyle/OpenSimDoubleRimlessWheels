@@ -18,10 +18,6 @@ osimModel = Model(fName);
 % Set the visualizer use.
 osimModel.setUseVisualizer(options.useVis);
 
-% Initialize the underlying computational system and get a reference to
-% the system state.
-state = osimModel.initSystem();
-
 % Set the Vizualizer parameters
 if options.useVis
     sviz = osimModel.updVisualizer().updSimbodyVisualizer();
@@ -43,6 +39,16 @@ end
 % set up a ForceReporter
 %forceReport = ForceReporter(osimModel);
 
+% set up a StatesTrajectoryReporter
+reporter = StatesTrajectoryReporter();
+reporter.setName('reporter');
+reporter.set_report_time_interval(0.01);
+osimModel.addComponent(reporter);
+
+% Initialize the underlying computational system and get a reference to
+% the system state.
+state = osimModel.initSystem();
+
 htic = tic;
 disp('Running forward tool')
 manager = Manager(osimModel);
@@ -56,11 +62,14 @@ fprintf('Forward Tool Finished in %.1f s\n',htoc);
 %% Get the states table from the manager and print the results.
 simData = struct;
 if saveName
-disp('Getting states table from manager')
-tic;
-sTable = manager.getStatesTable();
-fprintf('Took %.4f s\n',toc)
 %fTable = forceReport.getForcesTable(); % doesn't work...
+
+tic;
+disp('Getting states from trajectory reporter')
+statesTraj = reporter.getStates();
+sTable = statesTraj.exportToTable(osimModel);
+fprintf('Took %.4f s\n',toc)
+
 
 stofiles = STOFileAdapter();
 fprintf('Writing table to %s\n',[saveName,'.sto'])
