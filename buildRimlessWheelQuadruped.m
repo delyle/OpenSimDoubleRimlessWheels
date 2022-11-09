@@ -6,12 +6,14 @@ blankSlate
 import org.opensim.modeling.*
 
 %% Key Model Variables
-modelNamePrefix = '3DRimlessWheelQuadruped';
-murphy_x = 40;
-murphy_y = 40;
-murphy_z = 3;
+modelNamePrefix = 'DoubleRW';
+resultsDir = 'modelsAndResults';
+murphy_x = 1;
+murphy_y = 1;
+murphy_z = 0.8;
 legLength = 0.50;
 legWidth = 0.05;
+legMass = 0.05;
 trunkMass = 10;
 trunkLength = 1.5;
 trunkWidth = 0.5;
@@ -45,8 +47,8 @@ cylLength = legLength/2;
 
 % whether to run a simulation
 simulate = true;
-endTime = 30;
-useVis = false;
+endTime = 10;
+useVis = true;
 
 %% intantiate an empty OpenSim Model
 angleOffsetRightToLeft = angleOffsetRight - angleOffsetLeft;
@@ -181,7 +183,7 @@ trunkToLegPosZ = trunkWidth/2;
 trunkToLegPosX = hipPosX;
 sidePrefix = 'rHind';
 newLegSet = true;
-RimlessWheelQuad_addHindLegs
+RimlessWheelQuad_addLegs
 
 % Make and add Left Hind legs
 nLegs = nLeftLegs;
@@ -189,7 +191,7 @@ legAngle = 360/nLegs;
 angleOffsetToPinLeg = angleOffsetLeft-angleOffsetRight;
 legZOffset = -trunkWidth;
 sidePrefix = 'lHind';
-RimlessWheelQuad_addHindLegs
+RimlessWheelQuad_addLegs
 
 %% Add Fore Legs
 
@@ -203,7 +205,7 @@ trunkToLegPosZ = trunkWidth/2;
 trunkToLegPosX = shoulderPosX;
 sidePrefix = 'rFore';
 newLegSet = true;
-RimlessWheelQuad_addHindLegs
+RimlessWheelQuad_addLegs
 
 % Make and add Left Fore legs
 nLegs = nLeftLegs;
@@ -211,7 +213,7 @@ legAngle = 360/nLegs;
 angleOffsetToPinLeg = angleOffsetLeft-angleOffsetRight;
 legZOffset = -trunkWidth;
 sidePrefix = 'lFore';
-RimlessWheelQuad_addHindLegs
+RimlessWheelQuad_addLegs
 
 %% Add coordinate coupler constraint
 
@@ -231,8 +233,11 @@ osimModel.addConstraint(legPhaseConstraint);
 %% Initialize the System (checks model consistency).
 osimModel.initSystem();
 
+saveDir = [resultsDir,'/',modelName,'/'];
+mkdir(saveDir)
+
 % Save the model to a file
-fname = [modelName,'.osim'];
+fname = [saveDir,modelName,'.osim'];
 osimModel.print(fname);
 disp([fname,' printed!']);
 

@@ -9,7 +9,7 @@ for i = 1:nLegs
     end
     LegS.(bodyname) = Body();
     LegS.(bodyname).setName(bodyname);
-    LegS.(bodyname).setMass(0.1);
+    LegS.(bodyname).setMass(legMass);
     LegS.(bodyname).setInertia(Inertia(0,0,0,0,0,0));
     % Add geometry for display
     dispGeom = Cylinder(legWidth/2,cylLength);

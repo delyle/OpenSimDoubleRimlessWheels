@@ -17,7 +17,7 @@ osimModel = Model(fName);
 
 % Set the visualizer use.
 osimModel.setUseVisualizer(options.useVis);
-
+osimModel.initSystem;
 % Set the Vizualizer parameters
 if options.useVis
     sviz = osimModel.updVisualizer().updSimbodyVisualizer();
