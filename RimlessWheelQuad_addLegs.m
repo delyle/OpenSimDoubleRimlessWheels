@@ -56,17 +56,15 @@ for i = 1:nLegs
     ContactS.(contactname).setName(contactname);
     osimModel.addContactGeometry(ContactS.(contactname));
     
-    % Make a Hunt Crossley Force for Right Hind1 and update parameters
-    ForceS.(forcename) = HuntCrossleyForce();
-    ForceS.(forcename).setName(forcename);
-    ForceS.(forcename).addGeometry(contactname);
-    ForceS.(forcename).addGeometry('PlatformContact');
-    ForceS.(forcename).setStiffness(stiffness);
-    ForceS.(forcename).setDissipation(dissipation);
-    ForceS.(forcename).setStaticFriction(staticFriction);
-    ForceS.(forcename).setDynamicFriction(dynamicFriction);
-    ForceS.(forcename).setViscousFriction(viscousFriction);
-    ForceS.(forcename).setTransitionVelocity(transitionVelocity);
+    % Make a Smooth Hunt Crossley Force and update parameters
+    ForceS.(forcename) = SmoothSphereHalfSpaceForce(forcename,ContactS.(contactname),groundContactSpace);
+    ForceS.(forcename).set_stiffness(stiffness);
+    ForceS.(forcename).set_dissipation(dissipation);
+    ForceS.(forcename).set_static_friction(staticFriction);
+    ForceS.(forcename).set_dynamic_friction(dynamicFriction);
+    ForceS.(forcename).set_viscous_friction(viscousFriction);
+    ForceS.(forcename).set_transition_velocity(transitionVelocity);
     osimModel.addForce(ForceS.(forcename));
+
     newLegSet = false;
 end

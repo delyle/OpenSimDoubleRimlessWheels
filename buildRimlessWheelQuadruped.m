@@ -8,6 +8,8 @@ import org.opensim.modeling.*
 %% Key Model Variables
 modelNamePrefix = 'DoubleRW';
 resultsDir = 'modelsAndResults';
+reorientGravity = true; % if true, there is no platform joint. Gravity is reoriented according to the platform angle.
+
 murphy_x = 1;
 murphy_y = 1;
 murphy_z = 0.8;
@@ -19,6 +21,7 @@ trunkLength = 1.5;
 trunkWidth = 0.5;
 trunkDepth = 0.125;
 contactSphereRadius = 0.025;
+rampInitialAngle = -8; % negative angles point the normal force along the x axis
 rampHeightOffset = 5;
 trunkColor = [255,10,10]/256;
 
@@ -33,7 +36,6 @@ shoulderPosX = trunkLength/2;
 trunkMOI = [murphy_x*trunkWidth^2,murphy_y*trunkWidth^2,murphy_z*trunkLength^2]*trunkMass/4;
 
 initialSpeed = -3;
-rampAngle = -8;
 
 % Define Contact Force Parameters
 stiffness           = 1000000;
@@ -48,8 +50,8 @@ cylLength = legLength/2;
 % whether to run a simulation
 simulate = true;
 endTime = 10;
-useVis = true;
-
+visualizeSim = false;
+visualizeModel = true;
 %% intantiate an empty OpenSim Model
 angleOffsetRightToLeft = angleOffsetRight - angleOffsetLeft;
 modelNamePostfix = sprintf('%i_M%.2f-%.2f-%.2f_RL%.0f_FH%.0f',nRightLegs,murphy_x,murphy_y,murphy_z,angleOffsetRightToLeft,angleOffsetForeToHind);
@@ -63,59 +65,74 @@ osimModel.setName(modelName)
 ground = osimModel.getGround();
 
 % define acceleration of gravity
-osimModel.setGravity(Vec3(0, -9.81,0));
+if reorientGravity
+    a = deg2rad(rampInitialAngle);
+    gvec = -9.81*[sin(a),cos(a),0];
+    osimModel.setGravity(osimVec3FromArray(gvec));
+    
+    % Make a contact Half space for the ground
+    groundContactLocation = Vec3(0,0,0);
+    groundContactOrientation = Vec3(0,0,-pi/2);
+    groundContactSpace = ContactHalfSpace(groundContactLocation,groundContactOrientation,ground);
+    contactSpaceName = 'GroundContact';
+    groundContactSpace.setName(contactSpaceName);
+    osimModel.addContactGeometry(groundContactSpace); 
+else
+    osimModel.setGravity(Vec3(0, -9.81,0));
 
-%% Construct bodies and joints
-%% Construct Platform
+    % Construct Platform
 
-platform = Body();
-platform.setName('Platform');
-platform.setMass(1);
-platform.setInertia( Inertia(1,1,1,0,0,0) );
+    platform = Body();
+    platform.setName('Platform');
+    platform.setMass(1);
+    platform.setInertia( Inertia(1,1,1,0,0,0) );
 
-% Add geometry to the body
-platformGeometry = Brick(Vec3(10,0.01,1));
-platformColor = 153/256;
-platformGeometry.setColor(Vec3(platformColor)); % a smokey black
-platform.attachGeometry(platformGeometry);
+    % Add geometry to the body
+    platformGeometry = Brick(Vec3(10,0.01,1));
+    platformColor = 153/256;
+    platformGeometry.setColor(Vec3(platformColor)); % a smokey black
+    platform.attachGeometry(platformGeometry);
 
 
-% Add Body to the Model
-osimModel.addBody(platform);
+    % Add Body to the Model
+    osimModel.addBody(platform);
 
-% Section: Create the Platform Joint
-% Make and add a Pin joint for the Platform Body
-locationInParent    = Vec3(0,0,0);
-orientationInParent = Vec3(0,0,0);
-locationInChild     = Vec3(0,0,0);
-orientationInChild  = Vec3(0,0,0);
-platformToGround    = PinJoint('PlatformToGround',...  % Joint Name
-                                ground,...             % Parent Frame
-                                locationInParent,...   % Translation in Parent Frame
-                                orientationInParent,...% Orientation in Parent Frame
-                                platform,...           % Child Frame
-                                locationInChild,...    % Translation in Child Frame
-                                orientationInChild);   % Orientation in Child Frame
+    % Section: Create the Platform Joint
+    % Make and add a Pin joint for the Platform Body
+    locationInParent    = Vec3(0,0,0);
+    orientationInParent = Vec3(0,0,0);
+    locationInChild     = Vec3(0,0,0);
+    orientationInChild  = Vec3(0,0,0);
+    platformToGround    = PinJoint('PlatformToGround',...  % Joint Name
+                                    ground,...             % Parent Frame
+                                    locationInParent,...   % Translation in Parent Frame
+                                    orientationInParent,...% Orientation in Parent Frame
+                                    platform,...           % Child Frame
+                                    locationInChild,...    % Translation in Child Frame
+                                    orientationInChild);   % Orientation in Child Frame
 
-% Update the coordinates of the new joint
-platform_rz = platformToGround.upd_coordinates(0);
-platform_rz.setRange([deg2rad(-100), deg2rad(100)]);
-platform_rz.setName('platform_rz');
-platform_rz.setDefaultValue(deg2rad(rampAngle));
-platform_rz.setDefaultSpeedValue(0);
-platform_rz.setDefaultLocked(true) % important to ensure rigid surface
+    % Update the coordinates of the new joint
+    platform_rz = platformToGround.upd_coordinates(0);
+    platform_rz.setRange([deg2rad(-100), deg2rad(100)]);
+    platform_rz.setName('platform_rz');
+    platform_rz.setDefaultValue(deg2rad(rampInitialAngle));
+    platform_rz.setDefaultSpeedValue(0);
+    platform_rz.setDefaultLocked(true) % important to ensure rigid surface
 
-% Add Joint to the Model
-osimModel.addJoint(platformToGround);
+    % Add Joint to the Model
+    osimModel.addJoint(platformToGround);
 
-% Make a Contact Half Space
-groundContactLocation = Vec3(0,0.025,0);
-groundContactOrientation = Vec3(0,0,-1.57);
-groundContactSpace = ContactHalfSpace(groundContactLocation,...
-                                       groundContactOrientation,...
-                                       platform);
-groundContactSpace.setName('PlatformContact');
-osimModel.addContactGeometry(groundContactSpace);
+    % Make a Contact Half Space
+    groundContactLocation = Vec3(0,0.025,0);
+    groundContactOrientation = Vec3(0,0,-1.57);
+    groundContactSpace = ContactHalfSpace(groundContactLocation,...
+                                           groundContactOrientation,...
+                                           platform);
+    contactSpaceName  = 'PlatformContact'; % needed for the addLegs script
+    groundContactSpace.setName(contactSpaceName);
+
+    osimModel.addContactGeometry(groundContactSpace);
+end
 
 %% Make and add a trunk Body
 trunk = Body();
@@ -130,7 +147,11 @@ trunk.attachGeometry(dispGeom);
 osimModel.addBody(trunk);
 
 % Make and add a free joint for the Pelvis Body
-trunkToPlatform = FreeJoint('trunkToPlatform', platform, trunk);
+if reorientGravity
+    trunkToPlatform = FreeJoint('trunkToPlatform', ground, trunk);    
+else
+    trunkToPlatform = FreeJoint('trunkToPlatform', platform, trunk);
+end
 %%
 % Update the coordinates of the new joint
 trunk_rx = trunkToPlatform.upd_coordinates(0); % Rotation about x
@@ -241,9 +262,17 @@ fname = [saveDir,modelName,'.osim'];
 osimModel.print(fname);
 disp([fname,' printed!']);
 
+
+
+
+
 %% Run simulation
 if simulate
-    options = struct('endTime',endTime,'stepSize',0.001,'useVis',useVis);
+    options = struct('endTime',endTime,'stepSize',0.001,'useVis',visualizeSim);
     simData = SimulateQuadrupedRimlessWheel(fname,options,[]);
 end
 
+% show the model
+if visualizeModel
+    VisualizerUtilities().showModel(osimModel)
+end
