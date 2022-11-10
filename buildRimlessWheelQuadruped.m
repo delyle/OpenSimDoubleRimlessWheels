@@ -147,49 +147,45 @@ trunk.attachGeometry(dispGeom);
 osimModel.addBody(trunk);
 
 % Make and add a free joint for the Pelvis Body
+coordNames = strcat('Trunk_',{'rx','ry','rz','tx','ty','tz'});
 if reorientGravity
-    trunkToPlatform = FreeJoint('trunkToPlatform', ground, trunk);    
+    trunkToPlatform = CustomFreeJoint('TrunkToGround', ground, trunk, coordNames);    
 else
-    trunkToPlatform = FreeJoint('trunkToPlatform', platform, trunk);
+    trunkToPlatform = CustomFreeJoint('TrunkToPlatform', platform, trunk);
 end
-%%
+% Add Joint to model
+osimModel.addJoint(trunkToPlatform)
+
+%
 % Update the coordinates of the new joint
 trunk_rx = trunkToPlatform.upd_coordinates(0); % Rotation about x
 trunk_rx.setRange([-pi, pi]);
-trunk_rx.setName('Trunk_rx');
 trunk_rx.setDefaultValue(0);
 
 trunk_ry = trunkToPlatform.upd_coordinates(1); % Rotation about y
 trunk_ry.setRange([-pi, pi]);
-trunk_ry.setName('Trunk_ry');
 trunk_ry.setDefaultValue(0);
 
 trunk_rz = trunkToPlatform.upd_coordinates(2); % Rotation about z
 trunk_rz.setRange([-pi, pi]);
-trunk_rz.setName('Trunk_rz');
 trunk_rz.setDefaultValue(0);
 
 trunk_tx = trunkToPlatform.upd_coordinates(3); % Translation about x
 trunk_tx.setRange([-10, 10]);
-trunk_tx.setName('Trunk_tx');
 trunk_tx.setDefaultValue(-10*(~reorientGravity)); % zero if gravity is reoriented, -10 if on the ramp
 trunk_tx.setDefaultSpeedValue(initialSpeed)
  
 trunk_ty = trunkToPlatform.upd_coordinates(4); % Translation about y
 trunk_ty.setRange([0,5]);
-trunk_ty.setName('Trunk_ty');
 trunk_ty.setDefaultValue(legLength+0.1);
 trunk_ty.setDefaultSpeedValue(0)
 
 trunk_tz = trunkToPlatform.upd_coordinates(5); % Translation along z
 trunk_tz.setRange([-5,5]);
-trunk_tz.setName('Trunk_tz');
 trunk_tz.setDefaultValue(0);
 trunk_tz.setDefaultSpeedValue(0)
 
-% Add Joint to model
-osimModel.addJoint(trunkToPlatform)
-
+osimModel.initSystem();
 %% Add Hind Legs
 
 [LegS, ContactS, ForceS] = deal(struct);
