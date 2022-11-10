@@ -71,7 +71,7 @@ if options.useVis
     sviz.setBackgroundTypeByInt(1);
     % Set the default ground height down so that the walker platform is
     % viewable.
-    sviz.setGroundHeight(-20);
+    %sviz.setGroundHeight(-20);
     % Set the initial position of the camera
     sviz.setCameraTransform(Transform(Rotation(0.9,Vec3(0,1,0)),Vec3(16,1,8)));
 end

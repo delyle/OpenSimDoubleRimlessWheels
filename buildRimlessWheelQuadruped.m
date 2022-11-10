@@ -268,8 +268,9 @@ disp([fname,' printed!']);
 
 %% Run simulation
 if simulate
-    options = struct('endTime',endTime,'stepSize',0.001,'useVis',visualizeSim);
-    simData = SimulateQuadrupedRimlessWheel(fname,options,[]);
+    options = struct('endTime',endTime,'stepSize',0.001,'reportInterval',0.01,...
+    'useVis',visualizeSim);
+    simData = RimlessWheelForwardSimulation(fname,'',[],options);
 end
 
 % show the model
