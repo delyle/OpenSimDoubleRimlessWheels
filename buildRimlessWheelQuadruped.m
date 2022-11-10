@@ -10,18 +10,18 @@ modelNamePrefix = 'DoubleRW';
 resultsDir = 'modelsAndResults';
 reorientGravity = true; % if true, there is no platform joint. Gravity is reoriented according to the platform angle.
 
-murphy_x = 1;
-murphy_y = 1;
-murphy_z = 0.8;
+murphy_x = 10;
+murphy_y = 10;
+murphy_z = 1.6;
 legLength = 0.50;
 legWidth = 0.05;
-legMass = 0.05;
-trunkMass = 10;
+legMass = 0.5;
+trunkMass = 20;
 trunkLength = 1.5;
 trunkWidth = 0.5;
 trunkDepth = 0.125;
 contactSphereRadius = 0.025;
-rampInitialAngle = -8; % negative angles point the normal force along the x axis
+rampInitialAngle = -9; % negative angles point the normal force along the x axis
 rampHeightOffset = 5;
 trunkColor = [255,10,10]/256;
 
@@ -38,7 +38,7 @@ trunkMOI = [murphy_x*trunkWidth^2,murphy_y*trunkWidth^2,murphy_z*trunkLength^2]*
 initialSpeed = -3;
 
 % Define Contact Force Parameters
-stiffness           = 1000000;
+stiffness           = 2000000;
 dissipation         = 2.0;
 staticFriction      = 2;
 dynamicFriction     = 0.8;
@@ -49,8 +49,8 @@ cylLength = legLength/2;
 
 % whether to run a simulation
 simulate = true;
-endTime = 10;
-visualizeSim = false;
+endTime = 15;
+visualizeSim = true;
 visualizeModel = true;
 %% intantiate an empty OpenSim Model
 angleOffsetRightToLeft = angleOffsetRight - angleOffsetLeft;
@@ -172,7 +172,7 @@ trunk_rz.setDefaultValue(0);
 trunk_tx = trunkToPlatform.upd_coordinates(3); % Translation about x
 trunk_tx.setRange([-10, 10]);
 trunk_tx.setName('Trunk_tx');
-trunk_tx.setDefaultValue(-10);
+trunk_tx.setDefaultValue(-10*(~reorientGravity)); % zero if gravity is reoriented, -10 if on the ramp
 trunk_tx.setDefaultSpeedValue(initialSpeed)
  
 trunk_ty = trunkToPlatform.upd_coordinates(4); % Translation about y
@@ -194,46 +194,46 @@ osimModel.addJoint(trunkToPlatform)
 
 [LegS, ContactS, ForceS] = deal(struct);
 
-% Make and add a Right Hind legs
-nLegs = nRightLegs;
-angleOffset = angleOffsetRight;
-angleOffsetToPinLeg = 0;
-legZOffset = 0;
-legAngle = 360/nLegs;
-trunkToLegPosZ = trunkWidth/2;
-trunkToLegPosX = hipPosX;
-sidePrefix = 'rHind';
+% Make and add Left Hind legs
 newLegSet = true;
+nLegs = nLeftLegs;
+angleOffsetToPinLeg = 0;
+angleOffset = angleOffsetLeft;
+legAngle = 360/nLegs;
+trunkToLegPosZ = -trunkWidth/2;
+trunkToLegPosX = hipPosX;
+legZOffset = 0;
+sidePrefix = 'lHind';
 RimlessWheelQuad_addLegs
 
-% Make and add Left Hind legs
-nLegs = nLeftLegs;
+% Make and add a Right Hind legs
+nLegs = nRightLegs;
+angleOffsetToPinLeg = angleOffsetRight-angleOffsetLeft;
+legZOffset = trunkWidth;
 legAngle = 360/nLegs;
-angleOffsetToPinLeg = angleOffsetLeft-angleOffsetRight;
-legZOffset = -trunkWidth;
-sidePrefix = 'lHind';
+sidePrefix = 'rHind';
 RimlessWheelQuad_addLegs
 
 %% Add Fore Legs
 
-% Make and add Right Fore legs
-nLegs = nRightLegs;
-angleOffset = angleOffsetRight;
-angleOffsetToPinLeg = 0;
-legZOffset = 0;
-legAngle = 360/nLegs;
-trunkToLegPosZ = trunkWidth/2;
-trunkToLegPosX = shoulderPosX;
-sidePrefix = 'rFore';
-newLegSet = true;
-RimlessWheelQuad_addLegs
-
 % Make and add Left Fore legs
+newLegSet = true;
 nLegs = nLeftLegs;
 legAngle = 360/nLegs;
-angleOffsetToPinLeg = angleOffsetLeft-angleOffsetRight;
-legZOffset = -trunkWidth;
+angleOffset = angleOffsetLeft;
+angleOffsetToPinLeg = 0;
+legZOffset = 0;
+trunkToLegPosZ = -trunkWidth/2;
+trunkToLegPosX = shoulderPosX;
 sidePrefix = 'lFore';
+RimlessWheelQuad_addLegs
+
+% Make and add Right Fore legs
+nLegs = nRightLegs;
+angleOffsetToPinLeg = angleOffsetRight-angleOffsetLeft;
+legZOffset = trunkWidth;
+legAngle = 360/nLegs;
+sidePrefix = 'rFore';
 RimlessWheelQuad_addLegs
 
 %% Add coordinate coupler constraint
@@ -242,9 +242,9 @@ legPhaseConstraint = CoordinateCouplerConstraint();
 %legPhaseConstraint = legPhaseConstraint.safeDownCast(legPhaseConstraint)
 
 independentCoords = ArrayStr();
-independentCoords.append('rHind1_rz');
+independentCoords.append('lHind1_rz');
 legPhaseConstraint.setIndependentCoordinateNames(independentCoords);
-legPhaseConstraint.setDependentCoordinateName('rFore1_rz');
+legPhaseConstraint.setDependentCoordinateName('lFore1_rz');
 coefficients = Vector(3,0);
 coefficients.set(0,1);
 legPhaseConstraint.setFunction(LinearFunction(1,deg2rad(angleOffsetForeToHind)))
