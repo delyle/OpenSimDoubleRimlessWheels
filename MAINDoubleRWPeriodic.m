@@ -12,4 +12,4 @@ finalAngle = pi/3;
 
 DoubleRWMakePlanarGuess(fName,finalAngle);
 
-%RimlessWheelPeriodicMoco(fName,-finalAngle)
+DoubleRWPeriodicMoco(fName,-finalAngle)

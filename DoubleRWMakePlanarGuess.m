@@ -61,15 +61,27 @@ end
 % overwrite simData.data for conversion to .sto
 simData.data = Data;
 
+% get number of time points
+nrows = size(Data,1);
+
+% add lambda and gamma fields
+lName = 'lambda_cid8_p0'; % multiplier
+gName = 'gamma_cid8_p0'; % slack
+
+simData.data.(lName) =zeros(nrows,1);
+simData.columnLabels.(lName) = lName;
+simData.data.(gName) =zeros(nrows,1);
+simData.columnLabels.(gName) = gName;
+
 % write header to be moco-compatible
 mocoHeader = [...
     "inDegrees=no";
     "num_controls=0";
     "num_derivatives=0";
-    "num_multipliers=0";
+    "num_multipliers=1";
     "num_parameters=0";
-    "num_slacks=0";
-    "num_states=14";
+    "num_slacks=1";
+    "num_states=16";
     "DataType=double";
     "version=3";
     string(['OpenSimVersion=',char(opensimCommon.GetVersion())])];
