@@ -14,13 +14,15 @@ problem.setModel(osimModel);
 problem.setTimeBounds(MocoInitialBounds(0.),MocoFinalBounds(0.1, 1));
 
 t2g = '/jointset/TrunkToGround/Trunk_';
-problem.setStateInfo([t2g,'tx/value'],[0 5],[0],[0 5]);
-%problem.setStateInfo('/jointset/PelvisToGround/Pelvis_tx/speed',[0 5],[0 5],[0 5]);
+problem.setStateInfo([t2g,'tx/value'],[0 1],[0],[0 1]); % with leg length of 0.5, this is more than reasonable
+problem.setStateInfo([t2g,'tx/speed'],[0 5],[0 5],[0 5]);
 problem.setStateInfo('/jointset/lHind1ToTrunk/lHind1_rz/value',sort([0 finalAngle]),0,finalAngle);
 
 
 % could put in bounds for other states...
-%problem.setStateInfo('/jointset/PelvisToGround/Pelvis_rx/value',pi/3*[-1 1],pi/3*[-1 1],pi/3*[-1 1]);
+problem.setStateInfo([t2g,'rx/value'],pi/6*[-1 1],pi/6*[-1 1],pi/6*[-1 1]);
+problem.setStateInfo([t2g,'ry/value'],pi/6*[-1 1],pi/6*[-1 1],pi/6*[-1 1]);
+problem.setStateInfo([t2g,'rz/value'],pi/6*[-1 1],pi/6*[-1 1],pi/6*[-1 1]);
 
 
 % Cost, minimize periodicity residuals
