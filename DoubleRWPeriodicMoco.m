@@ -29,7 +29,7 @@ periodicityGoal = MocoPeriodicityGoal('periodicityGoal');
 periodicityGoal.setMode('cost');
 problem.addGoal(periodicityGoal);
 
-periodicCoordList = {'rx','ry','ty','tz'};
+periodicCoordList = {'rx','ry','rz','ty','tz'};
 for iRange = 1:length(periodicCoordList)
     c = [t2g,periodicCoordList{iRange},'/value'];
     dc = [t2g,periodicCoordList{iRange},'/speed'];
@@ -38,7 +38,7 @@ for iRange = 1:length(periodicCoordList)
 end
 % add periodicity for speed
 periodicityGoal.addStatePair(MocoPeriodicityGoalPair([t2g,'tx','/speed']));
-periodicityGoal.addStatePair(MocoPeriodicityGoalPair([t2g,'rz','/speed']));
+periodicityGoal.addStatePair(MocoPeriodicityGoalPair(['/jointset/lHind1ToTrunk/lHind1_rz','/speed']));
 
 
 % Configure Solver
@@ -53,5 +53,6 @@ solution = study.solve();
 
 solution.unseal();
 solution.write([fName_prefix,'_3Dcycle.sto']);
+disp(['Solution written to ',fName_prefix,'_3Dcycle.sto'])
 
 study.visualize(solution);
