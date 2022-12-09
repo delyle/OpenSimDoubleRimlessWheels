@@ -48,9 +48,9 @@ transitionVelocity  = 0.2;
 cylLength = legLength/2;
 
 % whether to run a simulation
-simulate = true;
+simulate = false;
 endTime = 15;
-visualizeSim = true;
+visualizeSim = false;
 visualizeModel = true;
 %% intantiate an empty OpenSim Model
 angleOffsetRightToLeft = angleOffsetRight - angleOffsetLeft;

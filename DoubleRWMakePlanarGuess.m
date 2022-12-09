@@ -33,6 +33,8 @@ Data.time = reset0(t,iTarget(1));
 Data.lHind1_rz_value = reset0(X,iTarget(1));
 Data.Trunk_tx_value = reset0(Data.Trunk_tx_value,iTarget(1));
 
+% set forelimb variables to be within 0-360 deg
+Data.lFore1_rz_value(iTarget(1):iTarget(2)) = mod(Data.lFore1_rz_value(iTarget(1):iTarget(2)),2*pi);
 
 % set model defaults to values at iTarget
 import org.opensim.modeling.*
