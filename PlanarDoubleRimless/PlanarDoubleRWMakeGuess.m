@@ -1,16 +1,12 @@
-function DoubleRWMakePlanarGuess(fName,targetAngle,fNameNew)
+function PlanarDoubleRWMakeGuess(fName,targetAngle,fNameNew)
 if nargin < 3 
     fNameNew = fName;
 end
 
-
-
-OPC = strcat('Trunk_',{'rx','ry','tz'}); % off-planar coordinates
-
 % run a feedforward simulation
 
 options = struct('endTime',5,'stepSize',0.001,'reportInterval',0.01,...
-    'useVis',false,'lockedCoords',{OPC});
+    'useVis',false);
 initCoords = {'Trunk_tx',0,1};
 
 simData = RimlessWheelForwardSimulation(fName,false,initCoords,options);
@@ -20,6 +16,7 @@ Data = simData.data;
 
 t = Data.time;
 X = Data.lHind1_rz_value;
+Y = Data.lFore1_rz_value;
 
 modX = mod(X,targetAngle);
 dmodX = diff(modX)./diff(t);
@@ -34,7 +31,11 @@ Data.lHind1_rz_value = reset0(X,iTarget(1));
 Data.Trunk_tx_value = reset0(Data.Trunk_tx_value,iTarget(1));
 
 % set forelimb variables to be within 0-360 deg
-Data.lFore1_rz_value(iTarget(1):iTarget(2)) = mod(Data.lFore1_rz_value(iTarget(1):iTarget(2)),2*pi);
+% note: doing a modulo(X,2pi) often results in a 2pi step change, which we absolutely do not want
+% instead, we can keep the same offset between fore and hind limbs,
+% bringing the forelimb angle range closer to the hindlimb range.
+FHdiff = Y-X;
+Data.lFore1_rz_value = Data.lHind1_rz_value+FHdiff;
 
 % set model defaults to values at iTarget
 import org.opensim.modeling.*
@@ -67,8 +68,8 @@ simData.data = Data;
 nrows = size(Data,1);
 
 % add lambda and gamma fields
-lName = 'lambda_cid8_p0'; % multiplier
-gName = 'gamma_cid8_p0'; % slack
+lName = 'lambda_cid5_p0'; % multiplier
+gName = 'gamma_cid5_p0'; % slack
 
 simData.data.(lName) =zeros(nrows,1);
 simData.columnLabels.(lName) = lName;
@@ -83,11 +84,11 @@ mocoHeader = [...
     "num_multipliers=1";
     "num_parameters=0";
     "num_slacks=1";
-    "num_states=16";
+    "num_states=10";
     "DataType=double";
     "version=3";
     string(['OpenSimVersion=',char(opensimCommon.GetVersion())])];
-simDataToMocoSTO(strrep(fName,'.osim','_planarCycle.sto'),simData,mocoHeader)
+simDataToMocoSTO(strrep(fName,'.osim','_CycleGuess.sto'),simData,mocoHeader)
 
 fprintf('Done\n')
 

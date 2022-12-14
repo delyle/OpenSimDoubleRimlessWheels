@@ -6,7 +6,7 @@ blankSlate
 import org.opensim.modeling.*
 
 %% Key Model Variables
-modelNamePrefix = 'DoubleRW';
+modelNamePrefix = 'PlanarDoubleRW';
 resultsDir = 'modelsAndResults';
 reorientGravity = true; % if true, there is no platform joint. Gravity is reoriented according to the platform angle.
 
@@ -21,7 +21,7 @@ trunkLength = 1.5;
 trunkWidth = 0.5;
 trunkDepth = 0.125;
 contactSphereRadius = 0.025;
-rampInitialAngle = -9; % negative angles point the normal force along the x axis
+rampInitialAngle = -2; % negative angles point the normal force along the x axis
 rampHeightOffset = 5;
 trunkColor = [255,10,10]/256;
 
@@ -32,13 +32,14 @@ angleOffsetLeft = 0;
 angleOffsetForeToHind = 15;
 hipPosX = -trunkLength/2;
 shoulderPosX = trunkLength/2;
+constrainFHPhase = true;
 
 trunkMOI = [murphy_x*trunkWidth^2,murphy_y*trunkWidth^2,murphy_z*trunkLength^2]*trunkMass/4;
 
-initialSpeed = -3;
+initialSpeed = 0.2;
 
 % Define Contact Force Parameters
-stiffness           = 2000000;
+stiffness           = 2e6;
 dissipation         = 2.0;
 staticFriction      = 2;
 dynamicFriction     = 0.8;
@@ -48,9 +49,9 @@ transitionVelocity  = 0.2;
 cylLength = legLength/2;
 
 % whether to run a simulation
-simulate = false;
+simulate = true;
 endTime = 15;
-visualizeSim = false;
+visualizeSim = true;
 visualizeModel = true;
 %% intantiate an empty OpenSim Model
 angleOffsetRightToLeft = angleOffsetRight - angleOffsetLeft;
@@ -135,6 +136,7 @@ else
 end
 
 %% Make and add a trunk Body
+import org.opensim.modeling.*
 trunk = Body();
 trunk.setName('Trunk');
 trunk.setMass(trunkMass);
@@ -146,46 +148,32 @@ trunk.attachGeometry(dispGeom);
 % Add Body to the Model
 osimModel.addBody(trunk);
 
-% Make and add a free joint for the Pelvis Body
-coordNames = strcat('Trunk_',{'rx','ry','rz','tx','ty','tz'});
-if reorientGravity
-    trunkToPlatform = CustomFreeJoint('TrunkToGround', ground, trunk, coordNames);    
-else
-    trunkToPlatform = CustomFreeJoint('TrunkToPlatform', platform, trunk);
-end
-% Add Joint to model
-osimModel.addJoint(trunkToPlatform)
+% Make and add a planar joint for the Pelvis Body
+import org.opensim.modeling.*
+trunkToPlatform = PlanarJoint('TrunkToGround',ground,trunk);
 
 %
 % Update the coordinates of the new joint
-trunk_rx = trunkToPlatform.upd_coordinates(0); % Rotation about x
-trunk_rx.setRange([-pi, pi]);
-trunk_rx.setDefaultValue(0);
 
-trunk_ry = trunkToPlatform.upd_coordinates(1); % Rotation about y
-trunk_ry.setRange([-pi, pi]);
-trunk_ry.setDefaultValue(0);
-
-trunk_rz = trunkToPlatform.upd_coordinates(2); % Rotation about z
+trunk_rz = trunkToPlatform.upd_coordinates(0); % Rotation about z
 trunk_rz.setRange([-pi, pi]);
 trunk_rz.setDefaultValue(0);
+trunk_rz.setName('Trunk_rz');
 
-trunk_tx = trunkToPlatform.upd_coordinates(3); % Translation about x
+trunk_tx = trunkToPlatform.upd_coordinates(1); % Translation about x
 trunk_tx.setRange([-10, 10]);
 trunk_tx.setDefaultValue(-10*(~reorientGravity)); % zero if gravity is reoriented, -10 if on the ramp
 trunk_tx.setDefaultSpeedValue(initialSpeed)
- 
-trunk_ty = trunkToPlatform.upd_coordinates(4); % Translation about y
+trunk_tx.setName('Trunk_tx'); 
+
+trunk_ty = trunkToPlatform.upd_coordinates(2); % Translation about y
 trunk_ty.setRange([0,5]);
 trunk_ty.setDefaultValue(legLength+0.1);
 trunk_ty.setDefaultSpeedValue(0)
+trunk_ty.setName('Trunk_ty')
 
-trunk_tz = trunkToPlatform.upd_coordinates(5); % Translation along z
-trunk_tz.setRange([-5,5]);
-trunk_tz.setDefaultValue(0);
-trunk_tz.setDefaultSpeedValue(0)
-
-osimModel.initSystem();
+% Add Joint to model
+osimModel.addJoint(trunkToPlatform)
 %% Add Hind Legs
 
 [LegS, ContactS, ForceS] = deal(struct);
@@ -234,6 +222,7 @@ RimlessWheelQuad_addLegs
 
 %% Add coordinate coupler constraint
 
+if constrainFHPhase
 legPhaseConstraint = CoordinateCouplerConstraint();
 %legPhaseConstraint = legPhaseConstraint.safeDownCast(legPhaseConstraint)
 
@@ -245,7 +234,7 @@ coefficients = Vector(3,0);
 coefficients.set(0,1);
 legPhaseConstraint.setFunction(LinearFunction(1,deg2rad(angleOffsetForeToHind)))
 osimModel.addConstraint(legPhaseConstraint);
-
+end
 
 %% Initialize the System (checks model consistency).
 osimModel.initSystem();
