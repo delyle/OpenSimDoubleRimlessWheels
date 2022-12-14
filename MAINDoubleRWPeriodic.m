@@ -1,6 +1,6 @@
 % MAINRimlessWheelPeriodic
 clear
-modelName = 'DoubleRW6_M10p00-10p00-1p60_RL30_FH15';
+modelName = 'DoubleRW12_M10p00-10p00-1p60_RL0_FH15';
 resultsDir = 'modelsAndResults';
 
 fName = [resultsDir,'/',modelName,'/',modelName,'.osim'];

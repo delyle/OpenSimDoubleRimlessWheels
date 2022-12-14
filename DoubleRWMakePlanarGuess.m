@@ -20,6 +20,7 @@ Data = simData.data;
 
 t = Data.time;
 X = Data.lHind1_rz_value;
+Y = Data.lFore1_rz_value;
 
 modX = mod(X,targetAngle);
 dmodX = diff(modX)./diff(t);
@@ -34,7 +35,11 @@ Data.lHind1_rz_value = reset0(X,iTarget(1));
 Data.Trunk_tx_value = reset0(Data.Trunk_tx_value,iTarget(1));
 
 % set forelimb variables to be within 0-360 deg
-Data.lFore1_rz_value(iTarget(1):iTarget(2)) = mod(Data.lFore1_rz_value(iTarget(1):iTarget(2)),2*pi);
+% note: doing a modulo(X,2pi) often results in a 2pi step change, which we absolutely do not want
+% instead, we can keep the same offset between fore and hind limbs,
+% bringing the forelimb angle range closer to the hindlimb range.
+FHdiff = Y-X;
+Data.lFore1_rz_value = Data.lHind1_rz_value+FHdiff;
 
 % set model defaults to values at iTarget
 import org.opensim.modeling.*

@@ -15,27 +15,27 @@ murphy_y = 10;
 murphy_z = 1.6;
 legLength = 0.50;
 legWidth = 0.05;
-legMass = 0.5;
+legMass = 0.25;
 trunkMass = 20;
 trunkLength = 1.5;
 trunkWidth = 0.5;
 trunkDepth = 0.125;
 contactSphereRadius = 0.025;
-rampInitialAngle = -9; % negative angles point the normal force along the x axis
+rampInitialAngle = -2; % negative angles point the normal force along the x axis
 rampHeightOffset = 5;
 trunkColor = [255,10,10]/256;
 
-nRightLegs = 6;
-nLeftLegs = 6;
-angleOffsetRight = 30;
+nRightLegs = 12;
+nLeftLegs = 12;
+angleOffsetRight = 15;
 angleOffsetLeft = 0;
-angleOffsetForeToHind = 15;
+angleOffsetForeToHind = 7.5;
 hipPosX = -trunkLength/2;
 shoulderPosX = trunkLength/2;
 
 trunkMOI = [murphy_x*trunkWidth^2,murphy_y*trunkWidth^2,murphy_z*trunkLength^2]*trunkMass/4;
 
-initialSpeed = -3;
+initialSpeed = 0.5;
 
 % Define Contact Force Parameters
 stiffness           = 2000000;
@@ -48,9 +48,9 @@ transitionVelocity  = 0.2;
 cylLength = legLength/2;
 
 % whether to run a simulation
-simulate = false;
-endTime = 15;
-visualizeSim = false;
+simulate = true;
+endTime = 10;
+visualizeSim = true;
 visualizeModel = true;
 %% intantiate an empty OpenSim Model
 angleOffsetRightToLeft = angleOffsetRight - angleOffsetLeft;
