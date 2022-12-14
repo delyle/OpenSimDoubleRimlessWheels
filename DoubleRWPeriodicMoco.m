@@ -16,7 +16,7 @@ problem.setTimeBounds(MocoInitialBounds(0.),MocoFinalBounds(0.1, 1));
 t2g = '/jointset/TrunkToGround/Trunk_';
 problem.setStateInfo([t2g,'tx/value'],[0 1],[0],[0 1]); % with leg length of 0.5, this is more than reasonable
 %problem.setStateInfo([t2g,'ty/value'],[0.45 1],[0.45 1],[0.45 1]); % with leg length of 0.5, this is more than reasonable
-problem.setStateInfo([t2g,'tx/speed'],[0 1],[0 1],[0 1]);
+problem.setStateInfo([t2g,'tx/speed'],[0 2],[0 2],[0 2]);
 problem.setStateInfo('/jointset/lHind1ToTrunk/lHind1_rz/value',sort([0 finalAngle]),0,finalAngle);
 
 
