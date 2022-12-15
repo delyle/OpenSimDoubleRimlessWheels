@@ -26,11 +26,16 @@ problem.setStateInfo([t2g,'ry/value'],pi/6*[-1 1],pi/6*[-1 1],pi/6*[-1 1]);
 problem.setStateInfo([t2g,'rz/value'],pi/6*[-1 1],pi/6*[-1 1],pi/6*[-1 1]);
 
 
-% Cost, minimize periodicity residuals
-
+% ensure gait periodicity
 periodicityGoal = MocoPeriodicityGoal('periodicityGoal');
 periodicityGoal.setMode('endpoint_constraint');
 problem.addGoal(periodicityGoal);
+
+% cost: minimize time
+
+ timeGoal = MocoFinalTimeGoal('timeGoal');
+% timeGoal.setMode('cost');
+ problem.addGoal(timeGoal);
 
 periodicCoordList = {'rx','ry','rz','ty','tz'};
 for iRange = 1:length(periodicCoordList)
@@ -51,7 +56,7 @@ solver.set_num_mesh_intervals(20);
 solver.set_optim_convergence_tolerance(1e-3);
 solver.set_optim_constraint_tolerance(1e-3);
 fName_prefix = strrep(fName,'.osim','');
-solver.setGuessFile([fName_prefix,'_planarCycle.sto'])
+solver.setGuessFile([fName_prefix,'_3DCycle.sto'])
 
 solution = study.solve();
 
