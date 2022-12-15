@@ -1,4 +1,4 @@
-function DoubleRWMakePlanarGuess(fName,targetAngle,fNameNew)
+function simData = DoubleRWMakePlanarGuess(fName,targetAngle,fNameNew)
 if nargin < 3 
     fNameNew = fName;
 end

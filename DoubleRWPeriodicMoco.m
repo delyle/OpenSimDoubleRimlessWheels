@@ -1,5 +1,14 @@
-function DoubleRWPeriodicMoco(fName,finalAngle)
+function DoubleRWPeriodicMoco(fName,finalAngle,bounds)
 import org.opensim.modeling.*
+
+% set default bounds
+boundsDefault = struct('TimeFinal',[0.1 1],'Trunk_tx_value',[0 1],'Trunk_tx_speed',[0 2]);
+
+if nargin < 3
+    bounds = boundsDefault;
+end
+
+bounds = fillDefaults(bounds,boundsDefault);
 
 osimModel = Model(fName);
 
@@ -10,13 +19,13 @@ problem = study.updProblem();% Define the OCP
 problem.setModel(osimModel);
 
 % Specify bounds
-% time starts at 0, can go up to 1
-problem.setTimeBounds(MocoInitialBounds(0.),MocoFinalBounds(0.1, 1));
+% time starts at 0, can go up to set amount
+problem.setTimeBounds(MocoInitialBounds(0),MocoFinalBounds(bounds.TimeFinal(1), bounds.TimeFinal(2)));
 
 t2g = '/jointset/TrunkToGround/Trunk_';
-problem.setStateInfo([t2g,'tx/value'],[0 1],[0],[0 1]); % with leg length of 0.5, this is more than reasonable
+problem.setStateInfo([t2g,'tx/value'],bounds.Trunk_tx_value,bounds.Trunk_tx_value(1),bounds.Trunk_tx_value); 
 %problem.setStateInfo([t2g,'ty/value'],[0.45 1],[0.45 1],[0.45 1]); % with leg length of 0.5, this is more than reasonable
-problem.setStateInfo([t2g,'tx/speed'],[0 2],[0 2],[0 2]);
+problem.setStateInfo([t2g,'tx/speed'],bounds.Trunk_tx_speed,bounds.Trunk_tx_speed,bounds.Trunk_tx_speed);
 problem.setStateInfo('/jointset/lHind1ToTrunk/lHind1_rz/value',sort([0 finalAngle]),0,finalAngle);
 
 
@@ -30,12 +39,6 @@ problem.setStateInfo([t2g,'rz/value'],pi/6*[-1 1],pi/6*[-1 1],pi/6*[-1 1]);
 periodicityGoal = MocoPeriodicityGoal('periodicityGoal');
 periodicityGoal.setMode('endpoint_constraint');
 problem.addGoal(periodicityGoal);
-
-% cost: minimize time
-
- timeGoal = MocoFinalTimeGoal('timeGoal');
-% timeGoal.setMode('cost');
- problem.addGoal(timeGoal);
 
 periodicCoordList = {'rx','ry','rz','ty','tz'};
 for iRange = 1:length(periodicCoordList)
@@ -61,7 +64,7 @@ solver.setGuessFile([fName_prefix,'_3DCycle.sto'])
 solution = study.solve();
 
 solution.unseal();
-solution.write([fName_prefix,'_3Dcycle.sto']);
+solution.write([fName_prefix,'_planarCycle.sto']);
 disp(['Solution written to ',fName_prefix,'_3Dcycle.sto'])
 
 study.visualize(solution);

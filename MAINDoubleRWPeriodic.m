@@ -10,6 +10,15 @@ fName = [resultsDir,'/',modelName,'/',modelName,'.osim'];
 % forward simulation
 finalAngle = pi/6;
 
-DoubleRWMakePlanarGuess(fName,finalAngle);
+simData = DoubleRWMakePlanarGuess(fName,finalAngle);
 
-DoubleRWPeriodicMoco(fName,-finalAngle)
+Xvel = simData.data.Trunk_tx_speed;
+Xpos = simData.data.Trunk_tx_value;
+maxSpeed = max(Xvel);
+strideLength = diff(Xpos([1,end]));
+
+bounds.TimeFinal = [0.1 2*simData.data.time(end)];
+bounds.Trunk_tx_speed = [0 2*maxSpeed];
+bounds.Trunk_tx_value = [0 2*strideLength];
+
+DoubleRWPeriodicMoco(fName,-finalAngle,bounds)
