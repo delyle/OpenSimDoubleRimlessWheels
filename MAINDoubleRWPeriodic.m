@@ -1,6 +1,6 @@
 % MAINRimlessWheelPeriodic
 clear
-modelName = 'DoubleRW12_M10p00-10p00-1p60_RL15_FH8';
+modelName = 'DoubleRW12_M0p50-0p50-0p50_RL15_FH8';
 resultsDir = 'modelsAndResults';
 
 fName = [resultsDir,'/',modelName,'/',modelName,'.osim'];
@@ -17,8 +17,8 @@ Xpos = simData.data.Trunk_tx_value;
 maxSpeed = max(Xvel);
 strideLength = diff(Xpos([1,end]));
 
-bounds.TimeFinal = [0.1 2*simData.data.time(end)];
-bounds.Trunk_tx_speed = [0 2*maxSpeed];
-bounds.Trunk_tx_value = [0 2*strideLength];
+bounds.TimeFinal = [0.1 2]*simData.data.time(end);
+bounds.Trunk_tx_speed = [0 1.2*maxSpeed];
+bounds.Trunk_tx_value = [0 1.2*strideLength];
 
 DoubleRWPeriodicMoco(fName,-finalAngle,bounds)

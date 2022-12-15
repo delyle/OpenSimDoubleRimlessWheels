@@ -30,9 +30,9 @@ problem.setStateInfo('/jointset/lHind1ToTrunk/lHind1_rz/value',sort([0 finalAngl
 
 
 % could put in bounds for other states...
-problem.setStateInfo([t2g,'rx/value'],pi/6*[-1 1],pi/6*[-1 1],pi/6*[-1 1]);
-problem.setStateInfo([t2g,'ry/value'],pi/6*[-1 1],pi/6*[-1 1],pi/6*[-1 1]);
-problem.setStateInfo([t2g,'rz/value'],pi/6*[-1 1],pi/6*[-1 1],pi/6*[-1 1]);
+%problem.setStateInfo([t2g,'rx/value'],pi/6*[-1 1],pi/6*[-1 1],pi/6*[-1 1]);
+%problem.setStateInfo([t2g,'ry/value'],pi/6*[-1 1],pi/6*[-1 1],pi/6*[-1 1]);
+%problem.setStateInfo([t2g,'rz/value'],pi/6*[-1 1],pi/6*[-1 1],pi/6*[-1 1]);
 
 
 % ensure gait periodicity
@@ -57,14 +57,15 @@ periodicityGoal.addStatePair(MocoPeriodicityGoalPair(['/jointset/lHind1ToTrunk/l
 solver = study.initCasADiSolver();
 solver.set_num_mesh_intervals(20);
 solver.set_optim_convergence_tolerance(1e-3);
-solver.set_optim_constraint_tolerance(1e-3);
+solver.set_optim_constraint_tolerance(1e-2);
 fName_prefix = strrep(fName,'.osim','');
-solver.setGuessFile([fName_prefix,'_3DCycle.sto'])
+solver.setGuessFile([fName_prefix,'_planarCycle.sto'])
+solver.set_optim_hessian_approximation('exact');
 
 solution = study.solve();
 
 solution.unseal();
-solution.write([fName_prefix,'_planarCycle.sto']);
+solution.write([fName_prefix,'_3DCycle.sto']);
 disp(['Solution written to ',fName_prefix,'_3Dcycle.sto'])
 
 study.visualize(solution);

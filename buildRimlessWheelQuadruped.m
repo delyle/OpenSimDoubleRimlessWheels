@@ -10,18 +10,18 @@ modelNamePrefix = 'DoubleRW';
 resultsDir = 'modelsAndResults';
 reorientGravity = true; % if true, there is no platform joint. Gravity is reoriented according to the platform angle.
 
-murphy_x = 10;
-murphy_y = 10;
-murphy_z = 1.6;
+murphy_x = 0.5;
+murphy_y = 0.5;
+murphy_z = 0.5;
 legLength = 0.50;
 legWidth = 0.05;
-legMass = 0.25;
+wheelMass = 1;
 trunkMass = 20;
 trunkLength = 1.5;
 trunkWidth = 0.5;
 trunkDepth = 0.125;
 contactSphereRadius = 0.025;
-rampInitialAngle = -2; % negative angles point the normal force along the x axis
+rampInitialAngle = -3; % negative angles point the normal force along the x axis
 rampHeightOffset = 5;
 trunkColor = [255,10,10]/256;
 
@@ -47,9 +47,13 @@ transitionVelocity  = 0.2;
 % halve leg length, because of how cylinders are built in opensim
 cylLength = legLength/2;
 
+% get leg mass
+legMassLeft = wheelMass/nLeftLegs;
+legMassRight = wheelMass/nRightLegs;
+
 % whether to run a simulation
 simulate = true;
-endTime = 10;
+endTime = 5;
 visualizeSim = true;
 visualizeModel = true;
 %% intantiate an empty OpenSim Model
@@ -200,6 +204,7 @@ trunkToLegPosZ = -trunkWidth/2;
 trunkToLegPosX = hipPosX;
 legZOffset = 0;
 sidePrefix = 'lHind';
+legMass = legMassLeft;
 RimlessWheelQuad_addLegs
 
 % Make and add a Right Hind legs
@@ -208,6 +213,7 @@ angleOffsetToPinLeg = angleOffsetRight-angleOffsetLeft;
 legZOffset = trunkWidth;
 legAngle = 360/nLegs;
 sidePrefix = 'rHind';
+legMass = legMassRight;
 RimlessWheelQuad_addLegs
 
 %% Add Fore Legs
