@@ -25,8 +25,8 @@ rampInitialAngle = -3; % negative angles point the normal force along the x axis
 rampHeightOffset = 5;
 trunkColor = [255,10,10]/256;
 
-nRightLegs = 10;
-nLeftLegs = 10;
+nRightLegs = 12;
+nLeftLegs = 12;
 leftRightPhase = 0.5;
 hindForePhase = 0.25;
 angleOffsetRight = 360/nRightLegs*leftRightPhase;
