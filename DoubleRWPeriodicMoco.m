@@ -3,7 +3,7 @@ import org.opensim.modeling.*
 
 % set default bounds
 boundsDefault = struct('TimeFinal',[0.1 1],'Trunk_tx_value',[0 1],'Trunk_tx_speed',[0 2]);
-settingsDefault = struct('meshIntervals',20,'guess','planar','constraintTolerance',1e-2);
+settingsDefault = struct('meshIntervals',20,'guess','planar','constraintTolerance',1e-2,'visualize',true);
 
 if nargin < 4
     settings = settingsDefault;
@@ -86,4 +86,6 @@ disp(['Solution written to ',fName_prefix,'_3Dcycle.sto'])
 flag = solution.success();
 disp(solution.getStatus());
 
-study.visualize(solution);
+if settings.visualize
+    study.visualize(solution);
+end
