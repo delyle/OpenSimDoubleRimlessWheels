@@ -1,14 +1,22 @@
-function DoubleRWPeriodicMoco(fName,finalAngle,bounds)
+function flag = DoubleRWPeriodicMoco(fName,finalAngle,bounds,settings)
 import org.opensim.modeling.*
 
 % set default bounds
 boundsDefault = struct('TimeFinal',[0.1 1],'Trunk_tx_value',[0 1],'Trunk_tx_speed',[0 2]);
+settingsDefault = struct('meshIntervals',20,'guess','planar');
 
-if nargin < 3
+if nargin < 4
+    settings = settingsDefault;
+    if nargin < 3
+        bounds = boundsDefault;
+    end
+end
+if isempty(bounds)
     bounds = boundsDefault;
 end
 
 bounds = fillDefaults(bounds,boundsDefault);
+settings = fillDefaults(settings, settingsDefault);
 
 osimModel = Model(fName);
 
@@ -29,10 +37,10 @@ problem.setStateInfo([t2g,'tx/speed'],bounds.Trunk_tx_speed,bounds.Trunk_tx_spee
 problem.setStateInfo('/jointset/lHind1ToTrunk/lHind1_rz/value',sort([0 finalAngle]),0,finalAngle);
 
 
-% could put in bounds for other states...
-%problem.setStateInfo([t2g,'rx/value'],pi/6*[-1 1],pi/6*[-1 1],pi/6*[-1 1]);
-%problem.setStateInfo([t2g,'ry/value'],pi/6*[-1 1],pi/6*[-1 1],pi/6*[-1 1]);
-%problem.setStateInfo([t2g,'rz/value'],pi/6*[-1 1],pi/6*[-1 1],pi/6*[-1 1]);
+% Put in bounds for other states...
+problem.setStateInfo([t2g,'rx/value'],pi/6*[-1 1],pi/6*[-1 1],pi/6*[-1 1]);
+problem.setStateInfo([t2g,'ry/value'],pi/6*[-1 1],pi/6*[-1 1],pi/6*[-1 1]);
+problem.setStateInfo([t2g,'rz/value'],pi/6*[-1 1],pi/6*[-1 1],pi/6*[-1 1]);
 
 
 % ensure gait periodicity
@@ -55,17 +63,27 @@ periodicityGoal.addStatePair(MocoPeriodicityGoalPair(['/jointset/lHind1ToTrunk/l
 
 % Configure Solver
 solver = study.initCasADiSolver();
-solver.set_num_mesh_intervals(20);
+solver.set_num_mesh_intervals(settings.meshIntervals);
 solver.set_optim_convergence_tolerance(1e-3);
 solver.set_optim_constraint_tolerance(1e-2);
 fName_prefix = strrep(fName,'.osim','');
-solver.setGuessFile([fName_prefix,'_planarCycle.sto'])
-solver.set_optim_hessian_approximation('exact');
+switch lower(settings.guess)
+    case 'planar'
+        solver.setGuessFile([fName_prefix,'_planarCycle.sto'])
+    case '3dsolution'
+        solver.setGuessFile([fName_prefix,'_3DCycle.sto'])
+    otherwise
+        error('settings.guess not recognized. Accepted values: ''planar'' or ''3Dsolution''')
+end
+%solver.set_optim_hessian_approximation('exact');
 
 solution = study.solve();
 
 solution.unseal();
 solution.write([fName_prefix,'_3DCycle.sto']);
 disp(['Solution written to ',fName_prefix,'_3Dcycle.sto'])
+
+flag = solution.success();
+disp(solution.getStatus());
 
 study.visualize(solution);

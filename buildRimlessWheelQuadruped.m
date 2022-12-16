@@ -25,11 +25,13 @@ rampInitialAngle = -3; % negative angles point the normal force along the x axis
 rampHeightOffset = 5;
 trunkColor = [255,10,10]/256;
 
-nRightLegs = 12;
-nLeftLegs = 12;
-angleOffsetRight = 15;
+nRightLegs = 10;
+nLeftLegs = 10;
+leftRightPhase = 0.5;
+hindForePhase = 0.25;
+angleOffsetRight = 360/nRightLegs*leftRightPhase;
 angleOffsetLeft = 0;
-angleOffsetForeToHind = 7.5;
+angleOffsetHindToFore = 360/nRightLegs*hindForePhase;
 hipPosX = -trunkLength/2;
 shoulderPosX = trunkLength/2;
 
@@ -58,7 +60,7 @@ visualizeSim = true;
 visualizeModel = true;
 %% intantiate an empty OpenSim Model
 angleOffsetRightToLeft = angleOffsetRight - angleOffsetLeft;
-modelNamePostfix = sprintf('%i_M%.2f-%.2f-%.2f_RL%.0f_FH%.0f',nRightLegs,murphy_x,murphy_y,murphy_z,angleOffsetRightToLeft,angleOffsetForeToHind);
+modelNamePostfix = sprintf('%i_M%.2f-%.2f-%.2f_RL%.0f_FH%.0f',nRightLegs,murphy_x,murphy_y,murphy_z,angleOffsetRightToLeft,angleOffsetHindToFore);
 modelNamePostfix = strrep(modelNamePostfix,'.','p');
 modelName = [modelNamePrefix,modelNamePostfix];
 
@@ -249,7 +251,7 @@ legPhaseConstraint.setIndependentCoordinateNames(independentCoords);
 legPhaseConstraint.setDependentCoordinateName('lFore1_rz');
 coefficients = Vector(3,0);
 coefficients.set(0,1);
-legPhaseConstraint.setFunction(LinearFunction(1,deg2rad(angleOffsetForeToHind)))
+legPhaseConstraint.setFunction(LinearFunction(1,deg2rad(angleOffsetHindToFore)))
 osimModel.addConstraint(legPhaseConstraint);
 
 
