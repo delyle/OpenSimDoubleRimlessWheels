@@ -270,6 +270,7 @@ mkdir(saveDir)
 fname = [saveDir,modelName,'.osim'];
 osimModel.print(fname);
 disp([fname,' printed!']);
+fname = [pwd,filesep,fname];
 
 
 %% Run simulation

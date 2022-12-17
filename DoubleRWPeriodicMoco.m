@@ -66,6 +66,7 @@ solver = study.initCasADiSolver();
 solver.set_num_mesh_intervals(settings.meshIntervals);
 solver.set_optim_convergence_tolerance(1e-3);
 solver.set_optim_constraint_tolerance(settings.constraintTolerance);
+solver.set_optim_max_iterations(1000);
 fName_prefix = strrep(fName,'.osim','');
 switch lower(settings.guess)
     case 'planar'
