@@ -1,6 +1,19 @@
+function fname = buildDoubleRW(Murphy,Phase,nSpokes,Slope,options)
 % Quadrupedal rimless wheel
 
-blankSlate
+optionsDefault = struct;
+
+% whether to run a simulation
+optionsDefault.simulate = true;
+optionsDefault.endTime = 5;
+optionsDefault.visualizeSim = true;
+optionsDefault.visualizeModel = true;
+
+if nargin < 5 || isempty(options)
+   options = optionsDefault;
+end
+
+options = fillDefaults(options,optionsDefault);
 
 %% Import OSim Libraries
 import org.opensim.modeling.*
@@ -10,10 +23,9 @@ modelNamePrefix = 'DoubleRW';
 resultsDir = 'modelsAndResults';
 reorientGravity = true; % if true, there is no platform joint. Gravity is reoriented according to the platform angle.
 
-murphy_x = 0.5;
-murphy_y = 0.5;
-murphy_z = 0.5;
 legLength = 0.50;
+global legWidth contactSphereRadius stiffness dissipation ...
+    staticFriction dynamicFriction viscousFriction transitionVelocity cylLength
 legWidth = 0.05;
 wheelMass = 1;
 trunkMass = 20;
@@ -21,21 +33,19 @@ trunkLength = 1.5;
 trunkWidth = 0.5;
 trunkDepth = 0.125;
 contactSphereRadius = 0.025;
-rampInitialAngle = -3; % negative angles point the normal force along the x axis
+rampInitialAngle = Slope; % negative angles point the normal force along the x axis
 rampHeightOffset = 5;
 trunkColor = [255,10,10]/256;
 
-nRightLegs = 12;
-nLeftLegs = 12;
 leftRightPhase = 0.5;
-hindForePhase = 0.25;
-angleOffsetRight = 360/nRightLegs*leftRightPhase;
+hindForePhase = Phase;
+angleOffsetRight = 360/nSpokes*leftRightPhase;
 angleOffsetLeft = 0;
-angleOffsetHindToFore = 360/nRightLegs*hindForePhase;
+angleOffsetHindToFore = 360/nSpokes*hindForePhase;
 hipPosX = -trunkLength/2;
 shoulderPosX = trunkLength/2;
 
-trunkMOI = [murphy_x*trunkWidth^2,murphy_y*trunkWidth^2,murphy_z*trunkLength^2]*trunkMass/4;
+trunkMOI = [Murphy(1)*trunkWidth^2,Murphy(2)*trunkWidth^2,Murphy(3)*trunkLength^2]*trunkMass/4;
 
 initialSpeed = 0.5;
 
@@ -50,17 +60,13 @@ transitionVelocity  = 0.2;
 cylLength = legLength/2;
 
 % get leg mass
-legMassLeft = wheelMass/nLeftLegs;
-legMassRight = wheelMass/nRightLegs;
+legMassLeft = wheelMass/nSpokes;
+legMassRight = wheelMass/nSpokes;
 
-% whether to run a simulation
-simulate = true;
-endTime = 5;
-visualizeSim = true;
-visualizeModel = true;
+
 %% intantiate an empty OpenSim Model
 angleOffsetRightToLeft = angleOffsetRight - angleOffsetLeft;
-modelNamePostfix = sprintf('%i_M%.2f-%.2f-%.2f_RL%.0f_FH%.0f',nRightLegs,murphy_x,murphy_y,murphy_z,angleOffsetRightToLeft,angleOffsetHindToFore);
+modelNamePostfix = sprintf('%i_M%.2f-%.2f-%.2f_RL%.0f_FH%.0f',nSpokes,Murphy(1),Murphy(2),Murphy(3),angleOffsetRightToLeft,angleOffsetHindToFore);
 modelNamePostfix = strrep(modelNamePostfix,'.','p');
 modelName = [modelNamePrefix,modelNamePostfix];
 
@@ -197,11 +203,11 @@ osimModel.initSystem();
 [LegS, ContactS, ForceS] = deal(struct);
 
 % Make and add Left Hind legs
+nLegs = nSpokes;
 newLegSet = true;
-nLegs = nLeftLegs;
 angleOffsetToPinLeg = 0;
 angleOffset = angleOffsetLeft;
-legAngle = 360/nLegs;
+legAngle = 360/nSpokes;
 trunkToLegPosZ = -trunkWidth/2;
 trunkToLegPosX = hipPosX;
 legZOffset = 0;
@@ -210,10 +216,10 @@ legMass = legMassLeft;
 RimlessWheelQuad_addLegs
 
 % Make and add a Right Hind legs
-nLegs = nRightLegs;
+newLegSet = false;
 angleOffsetToPinLeg = angleOffsetRight-angleOffsetLeft;
 legZOffset = trunkWidth;
-legAngle = 360/nLegs;
+legAngle = 360/nSpokes;
 sidePrefix = 'rHind';
 legMass = legMassRight;
 RimlessWheelQuad_addLegs
@@ -222,8 +228,7 @@ RimlessWheelQuad_addLegs
 
 % Make and add Left Fore legs
 newLegSet = true;
-nLegs = nLeftLegs;
-legAngle = 360/nLegs;
+legAngle = 360/nSpokes;
 angleOffset = angleOffsetLeft;
 angleOffsetToPinLeg = 0;
 legZOffset = 0;
@@ -233,7 +238,7 @@ sidePrefix = 'lFore';
 RimlessWheelQuad_addLegs
 
 % Make and add Right Fore legs
-nLegs = nRightLegs;
+newLegSet = false;
 angleOffsetToPinLeg = angleOffsetRight-angleOffsetLeft;
 legZOffset = trunkWidth;
 legAngle = 360/nLegs;
@@ -265,19 +270,94 @@ mkdir(saveDir)
 fname = [saveDir,modelName,'.osim'];
 osimModel.print(fname);
 disp([fname,' printed!']);
-
-
-
+fname = [pwd,filesep,fname];
 
 
 %% Run simulation
-if simulate
-    options = struct('endTime',endTime,'stepSize',0.001,'reportInterval',0.01,...
-    'useVis',visualizeSim);
-    simData = RimlessWheelForwardSimulation(fname,'',[],options);
+if options.simulate
+    VisOptions = struct('endTime',options.endTime,'stepSize',0.001,'reportInterval',0.01,...
+    'useVis',options.visualizeSim);
+    RimlessWheelForwardSimulation(fname,'',[],VisOptions);
 end
 
 % show the model
-if visualizeModel
+if options.visualizeModel
     VisualizerUtilities().showModel(osimModel)
+end
+
+end
+
+function osimModel = addLegs(osimModel,LegS,ContactS,ForceS,newLegSet,Nspokes,angleOffset,trunkToLegPosX,trunkToLegPosZ,angleOffsetToPinLeg,legZOffset,legAngle,sidePrefix,legMass);
+global legWidth contactSphereRadius 
+
+import org.opensim.modeling.*
+for i = 1:Nspokes
+    bodyname = [sidePrefix,num2str(i)];
+    if newLegSet
+        jointname = [bodyname,'ToTrunk'];
+        pinnedLegName = bodyname;
+    else
+        jointname = [bodyname,'To',pinnedLegName];
+    end
+    LegS.(bodyname) = Body();
+    LegS.(bodyname).setName(bodyname);
+    LegS.(bodyname).setMass(legMass);
+    LegS.(bodyname).setInertia(Inertia(0,0,0,0,0,0));
+    % Add geometry for display
+    dispGeom = Cylinder(legWidth/2,cylLength);
+    if newLegSet
+        dispColor = [255,255,51]/256; % a nice yellow color, only for pinned leg
+    else
+        dispColor = [1 1 1];
+    end
+    dispGeom.setColor(Vec3(dispColor(1),dispColor(2),dispColor(3)));
+    LegS.(bodyname).attachGeometry(dispGeom);
+    
+    % Add Body to the Model
+    osimModel.addBody(LegS.(bodyname));
+    
+    
+    % Make and add a joint for the leg
+    orientationInParent = Vec3(0,0,deg2rad(legAngle*(i-1)+newLegSet*angleOffset+(~newLegSet)*angleOffsetToPinLeg));
+    locationInChild     = Vec3(0,-cylLength,0);
+    orientationInChild  = Vec3(0,0,0);
+    
+    if newLegSet
+        % use a pin joint
+        locationInParent    = Vec3(trunkToLegPosX,0,trunkToLegPosZ);
+        LegS.(jointname) = PinJoint(jointname, trunk, locationInParent, ...
+            orientationInParent, LegS.(bodyname), locationInChild, orientationInChild);
+        pinJoint_rz = LegS.(jointname).upd_coordinates(0);
+        pinJoint_rz.setName([bodyname,'_rz'])
+        osimModel.addJoint(LegS.(jointname))
+    else
+        % Weld joint for all other legs
+        locationInParent    = Vec3(0,-cylLength,legZOffset);
+        LegS.(jointname) = WeldJoint(jointname, LegS.(pinnedLegName), locationInParent, ...
+            orientationInParent, LegS.(bodyname), locationInChild, orientationInChild);
+        osimModel.addJoint(LegS.(jointname))
+    end
+    
+    contactname = [bodyname,'Contact'];
+    forcename = [bodyname,'Force'];
+    % Make a Right leg Contact Sphere
+    ContactS.(contactname) = ContactSphere();
+    ContactS.(contactname).setRadius(contactSphereRadius);
+    ContactS.(contactname).setLocation( Vec3(0,cylLength,0) );
+    ContactS.(contactname).setFrame(LegS.(bodyname))
+    ContactS.(contactname).setName(contactname);
+    osimModel.addContactGeometry(ContactS.(contactname));
+    
+    % Make a Smooth Hunt Crossley Force and update parameters
+    ForceS.(forcename) = SmoothSphereHalfSpaceForce(forcename,ContactS.(contactname),groundContactSpace);
+    ForceS.(forcename).set_stiffness(stiffness);
+    ForceS.(forcename).set_dissipation(dissipation);
+    ForceS.(forcename).set_static_friction(staticFriction);
+    ForceS.(forcename).set_dynamic_friction(dynamicFriction);
+    ForceS.(forcename).set_viscous_friction(viscousFriction);
+    ForceS.(forcename).set_transition_velocity(transitionVelocity);
+    osimModel.addForce(ForceS.(forcename));
+
+    newLegSet = false;
+end
 end

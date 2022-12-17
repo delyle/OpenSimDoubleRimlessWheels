@@ -1,9 +1,9 @@
-function flag = DoubleRWPeriodicMoco(fName,finalAngle,bounds,settings)
+function [flag,solution] = DoubleRWPeriodicMoco(fName,finalAngle,bounds,settings)
 import org.opensim.modeling.*
 
 % set default bounds
 boundsDefault = struct('TimeFinal',[0.1 1],'Trunk_tx_value',[0 1],'Trunk_tx_speed',[0 2]);
-settingsDefault = struct('meshIntervals',20,'guess','planar');
+settingsDefault = struct('meshIntervals',20,'guess','planar','constraintTolerance',1e-2,'visualize',true);
 
 if nargin < 4
     settings = settingsDefault;
@@ -65,7 +65,8 @@ periodicityGoal.addStatePair(MocoPeriodicityGoalPair(['/jointset/lHind1ToTrunk/l
 solver = study.initCasADiSolver();
 solver.set_num_mesh_intervals(settings.meshIntervals);
 solver.set_optim_convergence_tolerance(1e-3);
-solver.set_optim_constraint_tolerance(1e-2);
+solver.set_optim_constraint_tolerance(settings.constraintTolerance);
+solver.set_optim_max_iterations(1000);
 fName_prefix = strrep(fName,'.osim','');
 switch lower(settings.guess)
     case 'planar'
@@ -86,4 +87,6 @@ disp(['Solution written to ',fName_prefix,'_3Dcycle.sto'])
 flag = solution.success();
 disp(solution.getStatus());
 
-study.visualize(solution);
+if settings.visualize
+    study.visualize(solution);
+end
